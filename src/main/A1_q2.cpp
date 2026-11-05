@@ -18,7 +18,54 @@ namespace aim::q2 {
 struct LabelEdit { std::string from; std::string to; };
 
 // BEGIN IMPLEMENTATION
-std::string edit_labels(std::string labels, const std::vector<LabelEdit>& edits) { throw std::runtime_error("TODO"); }
+std::string edit_labels(std::string labels, const std::vector<LabelEdit>& edits) {
+    // 遍历修改记录
+    for (const auto& edit : edits) {
+        // 情况 1：from 为空，to 非空
+        if (edit.from.empty() && !edit.to.empty()) {
+            if (!labels.empty()) {
+                labels += ",";
+            }
+            labels += edit.to;
+        }
+        // 情况 2：from 和 to 都为空
+        else if (edit.from.empty() && edit.to.empty()) {
+            continue;
+        }
+        // 情况 3：from 非空
+        else {
+            size_t pos = 0;
+            bool found = false;
+            
+            while ((pos = labels.find(edit.from, pos)) != std::string::npos) {
+                bool left_ok = (pos == 0 || labels[pos - 1] == ',');
+                bool right_ok = (pos + edit.from.length() == labels.length() || 
+                                 labels[pos + edit.from.length()] == ',');
+                
+                if (left_ok && right_ok) {
+                    found = true;
+                    break; 
+                }
+                pos++; 
+            }
+            
+            if (found) {
+                if (!edit.to.empty()) {
+                    labels.replace(pos, edit.from.length(), edit.to);
+                } else {
+                    if (labels == edit.from) {
+                        labels.clear();
+                    } else if (pos + edit.from.length() == labels.length()) {
+                        labels.erase(pos - 1); 
+                    } else {
+                        labels.erase(pos, edit.from.length() + 1);
+                    }
+                }
+            }
+        }
+    }
+    return labels;
+}
 // END IMPLEMENTATION
 }
 
